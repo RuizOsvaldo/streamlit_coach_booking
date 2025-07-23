@@ -33,11 +33,28 @@ def show_scheduler_page():
         )
         
         if available_slots:
-            selected_time = st.selectbox(
+            # Format slot options to show availability
+            slot_options = []
+            slot_mapping = {}
+            
+            for slot in available_slots:
+                time_str = slot['time'].strftime('%I:%M %p')
+                availability_str = f"{time_str} ({slot['available_spots']}/{slot['total_spots']} spots available)"
+                slot_options.append(availability_str)
+                slot_mapping[availability_str] = slot['time']
+            
+            selected_time_str = st.selectbox(
                 "Choose a time:",
-                available_slots,
-                format_func=lambda x: x.strftime('%I:%M %p')
+                slot_options
             )
+            
+            selected_time = slot_mapping[selected_time_str] if selected_time_str else None
+            
+            # Show group lesson info
+            if selected_time:
+                slot_info = next(slot for slot in available_slots if slot['time'] == selected_time)
+                if slot_info['total_spots'] > 1:
+                    st.info(f"ℹ️ This is a group lesson slot. Up to {slot_info['total_spots']} students can train together.")
         else:
             st.warning("No available slots for this date. Please choose another date.")
             selected_time = None
