@@ -6,7 +6,7 @@ import uuid
 from utils.email_utils import send_confirmation_email
 from utils.calendar_utils import get_available_slots
 from config.settings import initialize_session_state
-from pages import about, testimonials, admin, scheduler
+from components import about, testimonials, admin, scheduler
 
 # Page configuration
 st.set_page_config(
