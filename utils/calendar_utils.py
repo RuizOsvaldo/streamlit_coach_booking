@@ -3,8 +3,8 @@ from icalendar import Calendar, Event
 import uuid
 import pytz
 
-def get_available_slots(selected_date, availability, existing_bookings):
-    """Get available time slots for a given date"""
+def get_available_slots(selected_date, availability, existing_bookings, max_slots_per_time=3):
+    """Get available time slots for a given date with multiple bookings per slot"""
     day_name = selected_date.strftime('%A')
     
     if not availability[day_name]['enabled']:
@@ -19,15 +19,21 @@ def get_available_slots(selected_date, availability, existing_bookings):
     end_datetime = datetime.combine(selected_date, end_time)
     
     while current_time < end_datetime:
-        # Check if slot is already booked
-        is_booked = any(
-            booking['datetime'].date() == selected_date and 
-            booking['datetime'].time() == current_time.time()
-            for booking in existing_bookings
+        # Count how many bookings exist for this time slot
+        bookings_count = sum(
+            1 for booking in existing_bookings
+            if (booking['datetime'].date() == selected_date and 
+                booking['datetime'].time() == current_time.time())
         )
         
-        if not is_booked:
-            slots.append(current_time.time())
+        # Add slot if there's still capacity
+        if bookings_count < max_slots_per_time:
+            slots_remaining = max_slots_per_time - bookings_count
+            slots.append({
+                'time': current_time.time(),
+                'available_spots': slots_remaining,
+                'total_spots': max_slots_per_time
+            })
         
         current_time += timedelta(hours=1)
     
@@ -63,14 +69,33 @@ Please bring payment in cash or send via Venmo to {coach_info.get('venmo_handle'
     cal.add_component(event)
     return cal.to_ical()
 
-def is_slot_available(date, time, existing_bookings):
-    """Check if a specific date/time slot is available"""
+def is_slot_available(date, time, existing_bookings, max_slots_per_time=3):
+    """Check if a specific date/time slot has available capacity"""
     booking_datetime = datetime.combine(date, time)
     
-    return not any(
-        booking['datetime'] == booking_datetime
-        for booking in existing_bookings
+    # Count existing bookings for this time slot
+    bookings_count = sum(
+        1 for booking in existing_bookings
+        if booking['datetime'] == booking_datetime
     )
+    
+    return bookings_count < max_slots_per_time
+
+def get_slot_capacity_info(date, time, existing_bookings, max_slots_per_time=3):
+    """Get capacity information for a specific time slot"""
+    booking_datetime = datetime.combine(date, time)
+    
+    bookings_count = sum(
+        1 for booking in existing_bookings
+        if booking['datetime'] == booking_datetime
+    )
+    
+    return {
+        'booked': bookings_count,
+        'available': max_slots_per_time - bookings_count,
+        'total': max_slots_per_time,
+        'is_full': bookings_count >= max_slots_per_time
+    }
 
 def get_upcoming_bookings(bookings, days_ahead=7):
     """Get bookings for the next N days"""
