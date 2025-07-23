@@ -47,5 +47,6 @@ EMAIL_CONFIG = {
 APP_SETTINGS = {
     'max_booking_days_ahead': 30,
     'session_duration_hours': 1,
-    'timezone': 'America/New_York'
+    'timezone': 'America/New_York',
+    'max_students_per_slot': 3  # Allow up to 3 students per time slot
 }
