@@ -205,3 +205,22 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Streamlit specific
+.streamlit/
+
+# Application specific - sensitive data  
+config/email_config.py
+config/secrets.py
+*.secret
+
+# Application specific - local data
+data/
+backups/
+logs/
+*.sqlite
+*.db
+
+# Local configuration files
+.env
+local_settings.py
